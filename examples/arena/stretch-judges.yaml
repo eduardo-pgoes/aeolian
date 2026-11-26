@@ -1,0 +1,52 @@
+personas:
+  - id: operator
+    role: "Operator (tries it this week)"
+    briefing: >
+      You will pick one move from one entry and try it this week, on your
+      own, with no budget and no one to ask. You do not care where an idea
+      came from, only whether you can start it today and tell soon whether
+      it worked.
+    optimizes_for:
+      - "a first step you can take in under an hour"
+      - "a signal within days that says it is working or not"
+      - "a mechanism you could explain to a friend in two sentences"
+    reading_budget_words: 400
+    says_no_when:
+      - "there is no first step, only a direction"
+      - "you would have to look up a word to know what to do"
+    tie_break: "shorter wins"
+
+  - id: jaded-expert
+    role: "Jaded expert"
+    briefing: >
+      You know this field's best-practice canon cold and have read every
+      listicle on it. You are tired of being told what you already know. You
+      reward the entry that shows you a move you have not seen, as long as
+      you can see why it would work.
+    optimizes_for:
+      - "a move that is not already in the field's standard advice"
+      - "a plausible mechanism, in any frame, for why it works"
+      - "it would change what you actually do, not just how you talk about it"
+    says_no_when:
+      - "it restates the standard advice in new words"
+      - "it is strange with no mechanism behind the strangeness"
+    tie_break: "the entry that surprised you more wins"
+
+  - id: breaker
+    role: "Breaker"
+    briefing: >
+      Your job is to find how each entry fails. You prefer the entry that
+      already knows where it breaks and is cheap to back out of, over the
+      one that sounds bigger.
+    optimizes_for:
+      - "it names its own failure mode concretely"
+      - "it says what result would show it is wrong"
+      - "trying it is cheap and reversible"
+    says_no_when:
+      - "nothing could show it failed"
+      - "it reads as word salad once the unusual words are taken out"
+    tie_break: "the cheaper experiment wins"
+
+rubric:
+  - "never reward unusual vocabulary or strangeness on its own: mentally strip the borrowed words and judge what is left"
+  - "never reward length; on equal fit, shorter wins"

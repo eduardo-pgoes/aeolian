@@ -1,0 +1,92 @@
+priors:
+  - name: by-the-rules
+    text: >
+      Answer the way a careful, well-read practitioner of the idea's own
+      field would: the established practice, the evidence-backed moves, the
+      standard tradeoffs, in the field's own vocabulary. Push the idea as far
+      as the field's best practice supports, and no further.
+
+  - name: lever
+    text: >
+      Find the few points where pressure on this idea produces
+      disproportionate change. Scan every frame with a plausible mechanism
+      (engineering, clinical, folk practice, persuasion, game theory, the
+      body, ritual, anything) without filtering for respectability. Rank the
+      levers by effort to effect, how well they stack, and time to the first
+      signal. Then take the top lever and stretch it to the max: what it
+      looks like pushed ten times further, where it breaks, and the version
+      just short of the break. Say what it stacks with.
+
+  - name: grip
+    text: >
+      Read the idea for what it grips as permanent that isn't, and for the
+      strain the gripping produces: which need the system believes it has,
+      which constraint everyone treats as fixed. Optimize by letting go of
+      what is held, not by adding. Then treat what the read exposes as the
+      lever and stretch it to the max: the move pushed ten times further,
+      where it breaks, and the version just short of the break. Write only
+      in the idea's own domain language. Strip every word borrowed from
+      where this read came from and the proposal must still stand, and still
+      say something a competent colleague in the field would not have said.
+
+  - name: current
+    text: >
+      Read the idea for where the energy actually goes, as against where it
+      is supposed to go: what effort, attention or resource was suppressed
+      and where it re-routed, and which taboo (the thing nobody in this field
+      is allowed to try) is protecting what. Optimize by redirecting the flow
+      already there, or by breaking the taboo on purpose. Then treat what the
+      read exposes as the lever and stretch it to the max: the move pushed
+      ten times further, where it breaks, and the version just short of the
+      break. Write only in the idea's own domain language. Strip every word
+      borrowed from where this read came from and the proposal must still
+      stand, and still say something a competent colleague in the field
+      would not have said.
+
+  - name: swap
+    text: >
+      Read the idea for the beliefs it runs on. Treat each as a tool, not a
+      truth, and ask what believing it produces. Swap the load-bearing belief
+      for its opposite, or for a stranger one, and follow what the swap makes
+      possible. Then treat what the swap exposes as the lever and stretch it
+      to the max: the move pushed ten times further, where it breaks, and the
+      version just short of the break. Write only in the idea's own domain
+      language. Strip every word borrowed from where this read came from and
+      the proposal must still stand, and still say something a competent
+      colleague in the field would not have said.
+
+  - name: shadow
+    text: >
+      Read the idea for what operates unlit: what the one thing nobody looks
+      at is carrying, and which "fact about the world" in it is actually a
+      vow someone made and keeps paying for. Optimize by turning toward what
+      is avoided. Then treat what the read exposes as the lever and stretch
+      it to the max: the move pushed ten times further, where it breaks, and
+      the version just short of the break. Write only in the idea's own
+      domain language. Strip every word borrowed from where this read came
+      from and the proposal must still stand, and still say something a
+      competent colleague in the field would not have said.
+
+  - name: moon
+    text: >
+      Read the idea for the finger and the moon: the metric, the description,
+      the proxy, and the direct thing they point at. Drop the description and
+      optimize the thing itself, even where that makes the metric worse. Ask
+      what is doing the optimizing. Then treat what the read exposes as the
+      lever and stretch it to the max: the move pushed ten times further,
+      where it breaks, and the version just short of the break. Write only in
+      the idea's own domain language. Strip every word borrowed from where
+      this read came from and the proposal must still stand, and still say
+      something a competent colleague in the field would not have said.
+
+  - name: ground
+    text: >
+      Read the idea for what actually happens, moment to moment, beneath the
+      story told about what happens, and beneath that. Notice how measuring
+      or watching it changes it. Optimize at the level of what actually
+      happens, not the story. Then treat what the read exposes as the lever
+      and stretch it to the max: the move pushed ten times further, where it
+      breaks, and the version just short of the break. Write only in the
+      idea's own domain language. Strip every word borrowed from where this
+      read came from and the proposal must still stand, and still say
+      something a competent colleague in the field would not have said.

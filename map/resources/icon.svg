@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+<linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1f24"/><stop offset="1" stop-color="#0b0c0e"/></linearGradient>
+<pattern id="tp" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="16" cy="16" r="2" fill="#363a41"/></pattern>
+<radialGradient id="tr" cx=".5" cy=".5" r=".72"><stop offset=".42" stop-color="#000"/><stop offset="1" stop-color="#fff"/></radialGradient>
+<mask id="tm"><rect width="512" height="512" fill="url(#tr)"/></mask>
+<clipPath id="tc"><rect width="512" height="512" rx="114"/></clipPath>
+</defs>
+<g clip-path="url(#tc)"><rect width="512" height="512" fill="url(#tg)"/><rect width="512" height="512" fill="url(#tp)" mask="url(#tm)" opacity="0.9"/><path d="M114 1.5H398" stroke="rgb(255 255 255/.08)" stroke-width="3" fill="none"/></g>
+<rect x=".75" y=".75" width="510.5" height="510.5" rx="113.25" fill="none" stroke="rgb(255 255 255/.08)" stroke-width="1.5"/>
+<g transform="translate(256 256) scale(11.000)" fill="none" stroke="#eceae4" stroke-linecap="round" stroke-linejoin="round"><path d="M0 6.5L-9.96-1.86" stroke-width="1.050"/><path d="M-3.180 1.412L-6.889 -4.525" stroke-width="0.735"/><path d="M-1.380 0.661L-2.991 -6.151" stroke-width="0.735"/><path d="M1.380 0.661L2.991 -6.151" stroke-width="0.735"/><path d="M3.180 1.412L6.889 -4.525" stroke-width="0.735"/><path d="M0 6.5L9.96-1.86" stroke-width="1.050"/><path d="M-9.96-1.86A13 13 0 0 1 9.96-1.86" stroke-width="1.050"/></g>
+</svg>

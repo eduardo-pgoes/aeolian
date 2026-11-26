@@ -1,0 +1,170 @@
+/* The harp tokens. Every color, size, radius, duration and mix in styles.css
+   comes from here. Dark is the default; theme.ts sets data-theme on <html>
+   to 'dark' or 'light' (the OS, unless overridden). */
+
+:root,
+:root[data-theme='dark'] {
+  /* ground and elevation */
+  --page: #0f1012;
+  --ground: #0a0b0d;
+  --surface: #131417;
+  --raised: #1a1c20;
+  --sunk: #0e0f12;
+  --hover: #22252a;
+
+  /* rules and text */
+  --line: #25282d;
+  --line-strong: #363a41;
+  --text: #eceae4;
+  --mute: #999ba1;
+  --faint: #62656c;
+  --grid: #17191c;
+  --grid-major: #2b2e34;
+  --fault: #ff5a4e;
+  --focus: #eceae4;
+
+  /* role inks */
+  --sakura: #f27aa6;
+  --wisteria: #a78cf3;
+  --sky: #52b4ea;
+  --kaki: #f5a142;
+  --matcha: #8fcb5b;
+
+  /* terminal: 16 ANSI colors plus fg and bg */
+  --a0: #1c1f24;
+  --a1: #ff6b60;
+  --a2: #8fcb5b;
+  --a3: #f0c35a;
+  --a4: #58aee6;
+  --a5: #b192f2;
+  --a6: #5fcfc3;
+  --a7: #c8c5bd;
+  --a8: #62656c;
+  --a9: #ff9087;
+  --a10: #addf80;
+  --a11: #ffd986;
+  --a12: #86c7f0;
+  --a13: #cbb2f8;
+  --a14: #8ce2d8;
+  --a15: #f4f2ec;
+  --a-fg: #d7d5cf;
+  --a-bg: #0e0f12;
+
+  /* elevation: e1 resting, e2 focused, e3 above (drawer, popover) */
+  --sh-1: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 12px 28px -18px rgb(0 0 0 / 0.9);
+  --sh-2: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 32px 64px -28px rgb(0 0 0 / 0.95);
+  --sh-3: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 48px 96px -32px rgb(0 0 0 / 1);
+  /* e3 as a filter, for surfaces shaped by clip-path where box-shadow is clipped */
+  --sh-3f: drop-shadow(0 0 0.5px var(--line-strong)) drop-shadow(0 24px 32px rgb(0 0 0 / 0.7));
+  --scrim: rgb(5 6 8 / 0.42);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --page: #f1f0ec;
+  --ground: #e8e7e2;
+  --surface: #f8f7f4;
+  --raised: #efeee9;
+  --sunk: #fcfbf9;
+  --hover: #e6e4de;
+
+  --line: #dad8d1;
+  --line-strong: #c4c1b8;
+  --text: #141518;
+  --mute: #5c5e64;
+  --faint: #8e8f95;
+  --grid: #d6d4cd;
+  --grid-major: #bdbab1;
+  --fault: #d2382c;
+  --focus: #141518;
+
+  --sakura: #c23f72;
+  --wisteria: #6d52c8;
+  --sky: #1d7eb4;
+  --kaki: #b1640e;
+  --matcha: #478722;
+
+  --a0: #1f2125;
+  --a1: #c4372d;
+  --a2: #3d7d21;
+  --a3: #986700;
+  --a4: #1f6fa3;
+  --a5: #6c4cc0;
+  --a6: #127f78;
+  --a7: #8b8880;
+  --a8: #7a7c82;
+  --a9: #de4a3e;
+  --a10: #4c962c;
+  --a11: #b37f00;
+  --a12: #2a84b6;
+  --a13: #8466d6;
+  --a14: #169890;
+  --a15: #c9c6be;
+  --a-fg: #1d1f23;
+  --a-bg: #fcfbf9;
+
+  --sh-1: 0 1px 2px rgb(20 22 28 / 0.06), 0 10px 24px -16px rgb(20 22 28 / 0.22);
+  --sh-2: 0 2px 4px rgb(20 22 28 / 0.06), 0 28px 56px -28px rgb(20 22 28 / 0.38);
+  --sh-3: 0 4px 10px rgb(20 22 28 / 0.08), 0 40px 80px -30px rgb(20 22 28 / 0.48);
+  --sh-3f: drop-shadow(0 0 0.5px var(--line-strong)) drop-shadow(0 20px 28px rgb(20 22 28 / 0.22));
+  --scrim: rgb(20 22 28 / 0.16);
+
+  color-scheme: light;
+}
+
+:root {
+  /* type: 2 families, 7 sizes */
+  --sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --t11: 11px;
+  --t12: 12px;
+  --t13: 13px;
+  --t15: 15px;
+  --t20: 20px;
+  --t28: 28px;
+  --t44: 44px;
+
+  /* space: 4-based */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+
+  /* radii: kbd and chips, controls and rows, windows and panels, pill */
+  --r1: 3px;
+  --r2: 6px;
+  --r3: 10px;
+  --rp: 999px;
+
+  /* time: hover and color, enter and exit, travel, sustain */
+  --d1: 120ms;
+  --d2: 240ms;
+  --d3: 640ms;
+  --d4: 2400ms;
+  --e-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --e-damp: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-io: cubic-bezier(0.6, 0, 0.4, 1);
+
+  /* ink mixes: three strengths only */
+  --m-tint: 12%;
+  --m-soft: 32%;
+  --m-edge: 60%;
+
+  /* glyph stroke, and the drawer's two widths */
+  --gw: 1.5;
+  --gw-sm: 2.5;
+  --gw-lg: 1.25;
+  --gw-xl: 0.9;
+  --drawer-w: 320px;
+  --rail-w: 64px;
+  --sheet-w: 760px;
+  --sheet-dock-w: 360px;
+
+  /* 1 / zoom, set on the world layer by stage.ts */
+  --ik: 1;
+}

@@ -1,0 +1,44 @@
+/* ōgi, the mark. --text only, in both themes. */
+.ogi {
+  display: block;
+  flex: none;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--text);
+}
+/* Draw-in from the pivot, then the strum (playOgi). Never on hover. */
+.ogi.draw path {
+  stroke-dasharray: 1;
+  animation: ogi-draw var(--du) var(--e-damp) var(--dl) both;
+}
+@keyframes ogi-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  0.1% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ogi.draw path {
+    animation: none;
+  }
+}
+
+/* Lockup: 1.2em, above the x-height, with the pivot on the text baseline. */
+.ogi.lock {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  /* (12 - pivot 6.5) / 24 of the mark's height sits below the baseline. */
+  vertical-align: calc(-1.2em * 5.5 / 24);
+  margin-right: 0.2em;
+}

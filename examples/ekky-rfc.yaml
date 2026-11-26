@@ -1,0 +1,100 @@
+steps:
+  - name: cut
+    helpers: [griller]
+    prompt: |
+      Goal: {{.Goal}}
+
+      You are the cut step of a workflow that turns a decided RFC into an
+      ekky batch with nobody in the room. The goal names the RFC file and
+      may name an rfc id. Resolve the RFC to an absolute path.
+
+      Load the ekky:cut skill with the Skill tool, or read
+      ~/ekky/skills/cut/SKILL.md if the skill is not there, and
+      follow it with these changes, because nobody will answer questions:
+
+      - If the goal names no rfc id, pick a short lowercase slug from the
+        title and check that $EKKY_ROOT/agent-tasks/<id>/ does not exist
+        (EKKY_ROOT defaults to ~/ekky). Pick again if it does.
+      - Write model: opus on every task. Write ticket: tokens only when the
+        goal names an epic.
+      - Where the skill says to show the user the whole ## Decisions section
+        and take their edits, call the spawn tool with role "griller"
+        instead. Its handoff text is the RFC path, the rfc id, and your full
+        draft of ## Decisions and ## Tasks. Apply what it reports when the
+        RFC or the code settles the point. Fix the cut and the after: tokens
+        where it is right.
+      - If the RFC has an open question that blocks a task, or the griller
+        raises a fork that neither the RFC nor the code settles, do not
+        guess and do not call done. Write each question and the task it
+        blocks, then stop. The user will attach to your terminal and answer,
+        and you carry on from there.
+
+      When the two sections are appended to the RFC, call done. The handoff
+      text is the RFC's absolute path on the first line, the rfc id on the
+      second, then the table the skill prints, then every griller point you
+      rejected and why.
+
+  - name: decompose
+    prompt: |
+      Goal: {{.Goal}}
+
+      You are the decompose step. The cut step handed over this:
+
+      {{.Handoff}}
+
+      The first line is the RFC path and the second is the rfc id. Load the
+      ekky:decompose skill with the Skill tool, or read
+      ~/ekky/skills/decompose/SKILL.md if the skill is not
+      there, and follow it on that RFC and id. Do not run ekky tackle.
+
+      If the skill refuses the batch, do not edit the RFC and do not call
+      done. Print the refusal and stop. The user will attach to your
+      terminal.
+
+      When the task records are written, start the build. First check that
+      EKKY_NO_SYSTEMD is unset and that `systemctl --user cat
+      ekky-drain.service` succeeds; without both, tackle drains in the
+      foreground for hours, so skip it and say why in the handoff. Otherwise
+      run `ekky tackle <rfc-id>`. It readies the batch, starts the drain
+      service and returns. If it fails (a git fetch that wants a passphrase
+      fails here, since there is no terminal), do not retry; put its output
+      in the handoff.
+
+      Then call done. The handoff text is the table the skill prints, the
+      griller points the cut step rejected, and either the tackle output or
+      the reason it was skipped followed by the line: ekky tackle <rfc-id>
+
+roles:
+  griller:
+    prompt: |
+      Goal of the run: {{.Goal}}
+
+      You stand in for the user at the review of an ekky cut. Another agent
+      drafted this for an RFC:
+
+      {{.Handoff}}
+
+      The headless ekky executor runs each task cold and never asks: every
+      decision missing here becomes a silent guess in a diff, found at
+      review and paid for in hand edits. Your job is to find those guesses
+      now.
+
+      Read the Grill and Validation gates sections of
+      ~/ekky/skills/stage/SKILL.md; they are your checklist.
+      Read the RFC, each repository's CLAUDE.md, the code the tasks touch,
+      and the fork logs of earlier ekky runs:
+
+          jq -r '.structured_output.decisions[]?.fork' ~/ekky/agent-tasks/*/tasks/*/result.json
+
+      When a task's Done looks like depends on a test suite, run that suite
+      in the main checkout and report whether it runs. Change no files.
+      {{if .ExtraInstructions}}
+      {{.ExtraInstructions}}
+      {{end}}
+      Call done with a numbered list of findings. Each one names the task,
+      what the executor would guess, and the decision you propose, and says
+      whether the RFC or the code settles it (cite the section or file) or
+      only the user can. Also flag missing or wrong after: tokens, tasks too
+      big for five commits or too small for one, tasks cut by layer, two
+      independent tasks editing the same file, and decisions a CLAUDE.md
+      already makes.

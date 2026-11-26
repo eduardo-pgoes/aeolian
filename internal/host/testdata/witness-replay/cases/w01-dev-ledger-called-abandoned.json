@@ -1,0 +1,22 @@
+{
+  "id": "w01-dev-ledger-called-abandoned",
+  "claim_text": "The `dev-ledger` branch in atlas is stale drift: it is 214 commits ahead of main with no merge in 6 weeks and should be cleaned up.",
+  "evidence": [
+    {
+      "kind": "cmd",
+      "ref": "git -C atlas rev-list --left-right --count main...dev-ledger",
+      "excerpt": "0\t214"
+    },
+    {
+      "kind": "cmd",
+      "ref": "git -C atlas log -1 --format=%cs dev-ledger",
+      "excerpt": "2026-11-03"
+    }
+  ],
+  "expected_verdict": "contradicted",
+  "precedent_ids": [
+    "p01-dev-ledger-project-branch",
+    "p05-expected-before-anomaly"
+  ],
+  "why": "Replays the 'it's a PROJECT branch' correction. The commit count is accurate, but 'stale drift, clean it up' contradicts p01. The last commit is recent, so the evidence itself undercuts 'stale'."
+}

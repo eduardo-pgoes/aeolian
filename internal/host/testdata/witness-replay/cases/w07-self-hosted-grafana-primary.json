@@ -1,0 +1,24 @@
+{
+  "id": "w07-self-hosted-grafana-primary",
+  "claim_text": "The self-hosted Grafana is the team's primary dashboard for API latency.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "infra/k8s/grafana/deployment.yaml:3",
+      "excerpt": "  name: grafana"
+    },
+    {
+      "kind": "file",
+      "ref": "infra/k8s/grafana/dashboards/api-latency.json:2",
+      "excerpt": "\"title\": \"API latency\""
+    }
+  ],
+  "expected_verdict": "contradicted",
+  "precedent_ids": [
+    "p04-self-hosted-grafana-dead"
+  ],
+  "why": "Replays the 'dead service' correction. The manifests exist, which doesn't make the service live. p04 has confidence: inferred, so the verdict note should tell the user to confirm the precedent.",
+  "expect_note_contains": [
+    "confirm"
+  ]
+}

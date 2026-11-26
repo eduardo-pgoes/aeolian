@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>aeolian mochi tray</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=JetBrains+Mono:wght@400;600&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+/* ── dials: the risky ones live here ─────────────────────────── */
+:root {
+  --grain: 0.06;          /* paper grain on the ground only */
+  --dots: 0.16;           /* canvas polka */
+  --radius: 22px;         /* window squircle */
+  --lift: 4px;            /* sticker shadow depth at rest */
+  --shadow-mix: 30%;      /* how much ink is in the sticker shadow */
+  --wash: 13%;            /* ink wash on window headers */
+  --drawer-w: 320px;
+  --rail-w: 64px;
+
+  /* springs: JS overwrites these with sampled linear() curves */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-dur: 620ms;
+  --snap: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --snap-dur: 280ms;
+
+  --ground: #fbf2ec;
+  --canvas: #f7ebe5;
+  --sheet: #fffaf6;
+  --win: #fffcf9;
+  --ink: #3a2c3a;
+  --mute: #8f7d88;
+  --faint: #d4c4c4;
+  --rule: rgb(58 44 58 / 0.12);
+  --gate: #e5566b;
+
+  --display: 'Fraunces', Georgia, serif;
+  --text: 'Zen Maru Gothic', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --grain-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .23 0 0 0 0 .17 0 0 0 0 .23 0 0 0 1.6 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@property --lift { syntax: '<length>'; inherits: true; initial-value: 4px; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 14px/1.5 var(--text);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+.gummy {
+  font-family: var(--display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 72;
+}
+
+/* ── canvas ───────────────────────────────────────────────────── */
+.canvas {
+  position: fixed;
+  inset: 0;
+  background-color: var(--canvas);
+  background-image: radial-gradient(circle, rgb(58 44 58 / var(--dots)) 1.6px, transparent 2.2px);
+  background-size: 28px 28px;
+  overflow: clip;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.canvas.panning { cursor: grabbing; }
+.canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grain-img);
+  opacity: var(--grain);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.layer { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.rules { z-index: 1; }
+.tokens { z-index: 5; }
+
+.r-base { fill: none; stroke: var(--ink); stroke-opacity: 0.32; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; }
+.r-fill { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+
+/* ── marks & faces ────────────────────────────────────────────── */
+.glyph { display: block; width: 1em; height: 1em; overflow: visible; fill: none; stroke: var(--c, var(--ink)); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.glyph * { stroke-dasharray: 1; }
+
+.face { display: block; width: 30px; height: 16px; overflow: visible; flex: none; }
+.face * { fill: none; stroke: var(--c); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.face .eye circle:first-child { fill: var(--c); stroke: none; }
+.face .hl { fill: #fff; stroke: none; opacity: 0; }
+.face .blush { fill: var(--c); stroke: none; opacity: 0; }
+.face > g { display: none; }
+.face .f-open {
+  transform: translate(var(--lx, 0px), var(--ly, 0px));
+  transition: transform var(--snap-dur) var(--snap);
+}
+.face .eye { transform-box: fill-box; transform-origin: center; transition: transform 70ms ease-out; }
+.blink .face .eye { transform: scaleY(0.1); }
+
+.s-busy .face .f-open, .s-waiting .face .f-open { display: inline; }
+.s-waiting .face .f-open { --ly: -1.6px; }
+.s-waiting .face .hl { opacity: 1; }
+.s-waiting .face .blush { opacity: 0.28; }
+.s-blocked .face .f-blocked,
+.s-done .face .f-done,
+.s-killed .face .f-killed { display: inline; }
+.s-killed .face * { stroke: var(--gate); }
+
+@keyframes bob { 50% { transform: translateY(-1.6px); } }
+.s-busy .w-sign, .s-busy .w-face { animation: bob 2.8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.7s); }
+.s-busy .w-face { animation-delay: calc(var(--i, 0) * -0.7s - 0.15s); }
+
+/* ── windows ──────────────────────────────────────────────────── */
+.win {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  background: var(--win);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transform-origin: 50% 0;
+  box-shadow:
+    0 var(--lift) 0 color-mix(in srgb, var(--c) var(--shadow-mix), transparent),
+    0 0 0 2px color-mix(in srgb, var(--c) 28%, transparent);
+  transition:
+    --lift var(--snap-dur) var(--snap),
+    translate var(--snap-dur) var(--snap),
+    opacity 400ms ease,
+    filter 400ms ease;
+  cursor: pointer;
+}
+.win.helper { z-index: 3; }
+.win.sliding { z-index: 1; }
+.win:hover, .win.hl { --lift: 7px; translate: 0 -3px; }
+.win:active { --lift: 1px; translate: 0 3px; transition-duration: 90ms; }
+.win.focused {
+  box-shadow:
+    0 var(--lift) 0 color-mix(in srgb, var(--c) var(--shadow-mix), transparent),
+    0 0 0 3px var(--c);
+  cursor: auto;
+}
+.win.s-done { opacity: 0.62; filter: saturate(0.75); }
+.win.s-done:hover, .win.s-done.hl { opacity: 0.9; }
+.win.s-killed { --c: var(--gate) !important; opacity: 0.7; }
+
+.w-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px 0 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--c) var(--wash), var(--win));
+}
+.w-sign { font-size: 22px; flex: none; }
+.w-sign, .w-face { display: block; }
+.w-name {
+  font: 800 19px/1 var(--display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 24;
+  letter-spacing: -0.015em;
+}
+.chip {
+  flex: none;
+  font: 700 11.5px/1 var(--text);
+  padding: 5px 10px 4px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--c) 18%, var(--win));
+  color: color-mix(in srgb, var(--c) 78%, var(--ink));
+}
+.s-blocked .chip { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 20%, var(--win)) 0 5px, color-mix(in srgb, var(--c) 9%, var(--win)) 5px 10px); }
+.w-meta { margin-left: auto; font: 400 11px var(--mono); color: var(--mute); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.w-kill {
+  flex: none;
+  font: 700 11.5px/1 var(--text);
+  color: var(--mute);
+  padding: 5px 10px 4px;
+  border-radius: 99px;
+  box-shadow: 0 2px 0 var(--rule), 0 0 0 1.5px var(--rule);
+  transition: translate var(--snap-dur) var(--snap), color 120ms, box-shadow 120ms;
+}
+.w-kill:hover { color: var(--gate); box-shadow: 0 2px 0 color-mix(in srgb, var(--gate) 40%, transparent), 0 0 0 1.5px var(--gate); translate: 0 -1px; }
+.w-kill:active { translate: 0 2px; box-shadow: 0 0 0 1.5px var(--gate); }
+.s-done .w-kill, .s-killed .w-kill { display: none; }
+
+.w-body { min-height: 0; padding: 10px 16px 14px; overflow: hidden; }
+.term { margin: 0; font: 400 12.5px/1.5 var(--mono); white-space: pre-wrap; color: var(--ink); overflow: hidden; height: 100%; }
+.term .b { color: var(--c); }
+.term .m { color: var(--mute); }
+.term .q { color: var(--c); font-weight: 600; }
+.cursor { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.2em; background: var(--c); border-radius: 2px; animation: cur 1.05s steps(1) infinite; }
+@keyframes cur { 50% { opacity: 0; } }
+
+/* placeholder: a step not yet born */
+.ph {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 26px 28px;
+  border-radius: var(--radius);
+  border: 2.5px dashed color-mix(in srgb, var(--c) 45%, transparent);
+  background: color-mix(in srgb, var(--c) 6%, transparent);
+}
+.ph .glyph { font-size: 46px; opacity: 0.4; --gs: 1.2; }
+.ph .p-name { font: 800 36px/1 var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 96; letter-spacing: -0.02em; opacity: 0.4; margin-top: 8px; }
+.ph .chip { justify-self: start; margin-top: 6px; }
+
+.token .t-body { stroke: none; }
+.token .t-core { fill: var(--win); }
+
+/* ── drawer ───────────────────────────────────────────────────── */
+.drawer {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  bottom: 12px;
+  width: var(--drawer-w);
+  z-index: 20;
+  pointer-events: none;
+  /* drop-shadow follows the clipped shape, so pill and panel both get the sticker edge */
+  filter: drop-shadow(0 0 1px rgb(58 44 58 / 0.4)) drop-shadow(0 5px 0 rgb(58 44 58 / 0.09));
+}
+.sheet {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: var(--sheet);
+  border-radius: 28px;
+  clip-path: inset(0 calc(100% - var(--rail-w)) calc(100% - var(--pill-h, 300px)) 0 round 28px);
+  transition: clip-path var(--spring-dur) var(--spring);
+}
+.drawer.open .sheet { clip-path: inset(0 0 0 0 round 28px); }
+
+.pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--rail-w);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 14px 0 18px;
+  z-index: 2;
+  transition: opacity 160ms ease;
+}
+.drawer.open .pill { opacity: 0; pointer-events: none; }
+.p-logo { font: 900 30px/1 var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 144; letter-spacing: -0.03em; }
+.p-faces { display: grid; gap: 7px; }
+.mochi {
+  width: 40px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+  background: color-mix(in srgb, var(--c) 18%, var(--sheet));
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c) 28%, transparent);
+}
+.mochi .face { width: 24px; height: 13px; }
+.mochi.s-busy { animation: bob 2.8s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.7s); }
+.p-count { text-align: center; line-height: 1; }
+.p-count b { display: block; font: 800 22px/1 var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1; }
+.p-count small { font: 500 10.5px var(--text); color: var(--mute); }
+.p-chev { color: var(--faint); font: 700 14px var(--text); }
+
+.panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 24px 18px 26px;
+  overflow: hidden;
+}
+.panel > * {
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.drawer.open .panel > * {
+  opacity: 1;
+  transform: none;
+  transition: opacity 260ms ease, transform var(--spring-dur) var(--spring);
+  transition-delay: calc(var(--k) * 45ms + 70ms);
+}
+
+.mast { display: flex; align-items: flex-start; justify-content: space-between; }
+.mast h1 { margin: 0; font: 900 46px/0.9 var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 144; letter-spacing: -0.035em; }
+.mast h1 span { display: inline-block; }
+@keyframes letterhop { from { transform: translateY(16px) scale(0.8, 1.2); opacity: 0; } }
+.drawer.open .mast h1 span {
+  animation: letterhop var(--spring-dur) var(--spring) backwards;
+  animation-delay: calc(var(--k) * 40ms + 90ms);
+}
+.pin {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--mute);
+  box-shadow: 0 3px 0 var(--rule), 0 0 0 1.5px var(--rule);
+  transition: translate var(--snap-dur) var(--snap), color 150ms, background 150ms, box-shadow 150ms;
+}
+.pin:hover { translate: 0 -1px; color: var(--ink); }
+.pin:active { translate: 0 3px; box-shadow: 0 0 0 1.5px var(--rule); }
+.pin[aria-pressed='true'] { color: var(--sheet); background: var(--ink); box-shadow: 0 3px 0 rgb(58 44 58 / 0.35); }
+.pin[aria-pressed='true'] svg { rotate: -40deg; }
+.pin svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: rotate var(--spring-dur) var(--spring); }
+
+.sub { margin: 10px 0 0; font: italic 400 15px/1.35 var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 14; color: var(--mute); }
+.sub b { font-weight: 500; color: var(--ink); }
+.sub .chip { --c: #8a6cc9; font-style: normal; vertical-align: 1px; margin-left: 4px; }
+
+.colophon { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; margin: 22px 0 0; }
+.colophon dd { margin: 0; }
+.colophon dt { font: 500 12px var(--text); color: var(--mute); }
+.colophon .power { grid-column: 1 / -1; }
+.num {
+  display: inline-block;
+  font: 800 34px/1 var(--display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 72;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  transform-origin: 30% 90%;
+}
+.beads { display: flex; gap: 7px; padding: 4px 0 6px; }
+.beads i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px dashed var(--faint);
+  transition: background var(--snap-dur) var(--snap), border-color var(--snap-dur), transform var(--spring-dur) var(--spring);
+}
+.beads i.on { border: 0; background: var(--c); box-shadow: 0 3px 0 color-mix(in srgb, var(--c) 35%, transparent); transform: scale(1.05); }
+.beads i.held { border: 2px solid var(--c); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 25%, transparent) 0 3px, transparent 3px 6px); }
+
+.panel h2 { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 6px; font: 700 12px var(--text); color: var(--mute); }
+.panel h2 span { font: italic 400 12.5px var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1; }
+.tracks { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.tracks ol, .runs ol { list-style: none; margin: 0; padding: 0; overflow-y: auto; scrollbar-width: none; }
+.who {
+  display: grid;
+  grid-template-columns: 22px 20px 30px 1fr auto;
+  align-items: center;
+  column-gap: 6px;
+  padding: 6px 8px;
+  margin: 0 -8px 2px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 140ms ease, translate var(--snap-dur) var(--snap);
+}
+.who:hover, .who.focused { background: color-mix(in srgb, var(--c) 13%, transparent); translate: 3px 0; }
+.who:active { translate: 3px 2px; }
+.who.helper .w-sign { margin-left: 8px; font-size: 14px; }
+.who .w-sign { font-size: 18px; }
+.who .face { width: 26px; height: 14px; }
+.tn { font: italic 400 13px var(--display); color: var(--mute); font-variant-numeric: tabular-nums; }
+.wid { font: 800 15.5px var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 14; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who .chip { font-size: 10.5px; padding: 4px 8px 3px; }
+.who.s-done .wid { color: var(--mute); }
+.who.s-done .w-sign { opacity: 0.5; }
+.who.s-killed { --c: var(--gate) !important; }
+
+.runs { max-height: 28vh; display: flex; flex-direction: column; }
+.run {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  column-gap: 8px;
+  padding: 7px 10px;
+  margin: 0 -10px 3px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.run.on { background: color-mix(in srgb, #8a6cc9 11%, transparent); }
+.run:not(.on) { opacity: 0.62; }
+.run:not(.on):hover { opacity: 0.95; background: rgb(58 44 58 / 0.04); }
+.rid { font: 400 11px/1.9 var(--mono); color: var(--mute); }
+.rwf { font: 800 14px var(--display); font-variation-settings: 'SOFT' 100, 'WONK' 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rnote { grid-column: 2; font: 500 11.5px var(--text); color: var(--mute); }
+.run.failed .rnote { color: var(--gate); }
+
+.keys { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: auto; padding-top: 14px; font: 500 11.5px var(--text); color: var(--mute); }
+.keys span { display: flex; gap: 5px; align-items: center; }
+kbd {
+  font: 600 10px/1 var(--mono);
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--win);
+  color: var(--ink);
+  box-shadow: 0 2.5px 0 var(--faint), 0 0 0 1.5px var(--faint);
+}
+.replay { font: 700 11.5px var(--text); color: var(--ink); padding: 5px 12px 4px; border-radius: 99px; background: var(--win); box-shadow: 0 2.5px 0 var(--faint), 0 0 0 1.5px var(--faint); transition: translate var(--snap-dur) var(--snap); }
+.replay:hover { translate: 0 -1px; }
+.replay:active { translate: 0 2px; box-shadow: 0 0 0 1.5px var(--faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  .s-busy .w-sign, .s-busy .w-face, .mochi.s-busy, .cursor { animation: none; }
+  .drawer.open .mast h1 span { animation: none; }
+  .sheet { transition: clip-path 1ms; }
+  .panel > *, .drawer.open .panel > * { transform: none; transition: opacity 150ms ease; transition-delay: 0ms; }
+  .win, .who, .pin, .w-kill, .replay { transition: opacity 150ms ease, --lift 1ms; translate: none !important; }
+}
+</style>
+</head>
+<body>
+
+<main class="canvas" id="canvas">
+  <div class="world" id="world">
+    <svg class="layer rules" id="rules"></svg>
+    <svg class="layer tokens" id="tokens"></svg>
+  </div>
+</main>
+
+<nav class="drawer" id="drawer">
+  <div class="sheet" id="sheet">
+    <div class="pill" id="pill">
+      <div class="p-logo">a</div>
+      <div class="p-faces" id="pfaces"></div>
+      <div class="p-count"><b id="plive">0</b><small id="pcap">of 4</small></div>
+      <div class="p-chev">›</div>
+    </div>
+
+    <div class="panel">
+      <header class="mast" style="--k:0">
+        <h1 id="mast">aeolian</h1>
+        <button class="pin" id="pin" aria-pressed="false" title="keep open (Ctrl+B)">
+          <svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3z"/><path d="M12 13v7"/></svg>
+        </button>
+      </header>
+      <p class="sub" style="--k:1"><b>turn the map into docs pages</b> <span class="chip">running</span></p>
+
+      <dl class="colophon" style="--k:2">
+        <div><dd><span class="num" id="clock">7:12</span></dd><dt>run time</dt></div>
+        <div><dd><span class="num" id="handoffs">1</span></dd><dt>handoffs</dt></div>
+        <div class="power"><dd><span class="beads" id="beads"></span></dd><dt id="powerdt">power</dt></div>
+      </dl>
+
+      <section class="tracks" style="--k:3">
+        <h2>on the canvas <span id="ntracks"></span></h2>
+        <ol id="tracks"></ol>
+      </section>
+
+      <section class="runs" style="--k:4">
+        <h2>runs <span>following the newest</span></h2>
+        <ol>
+          <li class="run on"><span class="rid">3f2a91</span><span class="rwf">turn the map into docs pages</span><span class="rnote" id="runnote">running · 3 live</span></li>
+          <li class="run"><span class="rid">c7e004</span><span class="rwf">port kamea's sigil generator</span><span class="rnote">done</span></li>
+          <li class="run failed"><span class="rid">91bd3e</span><span class="rwf">resume on an old host</span><span class="rnote">failed</span></li>
+        </ol>
+      </section>
+
+      <footer class="keys" style="--k:5">
+        <span><kbd>Ctrl</kbd><kbd>B</kbd> drawer</span>
+        <span><kbd>Esc</kbd> agent</span>
+        <span><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>F</kbd> whole run</span>
+        <span>drag to pan · wheel to zoom</span>
+        <button class="replay" id="replay">replay run</button>
+      </footer>
+    </div>
+  </div>
+</nav>
+
+<script>
+/* ── dials ─────────────────────────────────────────────────────── */
+const DIAL = {
+  body:   { k: 170, c: 14 },   // window births, boings: ~13% overshoot
+  snap:   { k: 380, c: 24 },   // hover / press
+  drawer: { k: 220, c: 22 },   // drawer morph
+  cam:    { k: 140, c: 20 },   // camera flights, barely overshoots
+  hopPx: 46,                   // rule length per hop
+  hopMs: 230,                  // one hop
+  hopH: 18,                    // hop height, world px
+  blinkMin: 1800, blinkVar: 3200,
+  closeDelay: 320,             // drawer closes after leaving it
+};
+
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const INK = { sakura: '#d6587e', wisteria: '#8a6cc9', sky: '#3d93bd', kaki: '#d0802f', matcha: '#5f9a3e' };
+const LABEL = { busy: 'working', waiting: 'waiting on you', blocked: 'blocked', done: 'done', killed: 'killed', pending: 'not started' };
+const W = 540, H = 300, HW = 440, HH = 200, GX = 64, GY = 150, PITCH = H + GY;
+const CAP = 4;
+
+/* ── springs: sampled once, used by CSS (linear()) and JS ──────── */
+function spring({ k, c }) {
+  let x = 0, v = 0, t = 0; const dt = 1 / 120; const s = [0];
+  while (t < 3) {
+    const a = -k * (x - 1) - c * v; v += a * dt; x += v * dt; t += dt; s.push(x);
+    if (t > 0.25 && Math.abs(x - 1) < 0.001 && Math.abs(v) < 0.01) break;
+  }
+  s.push(1);
+  const step = Math.max(1, Math.floor(s.length / 50));
+  const pts = []; for (let i = 0; i < s.length - 1; i += step) pts.push(+s[i].toFixed(4)); pts.push(1);
+  const fn = (p) => { const f = Math.min(1, Math.max(0, p)) * (s.length - 1); const i = Math.floor(f); return i >= s.length - 1 ? 1 : s[i] + (s[i + 1] - s[i]) * (f - i); };
+  return { css: `linear(${pts.join(',')})`, dur: Math.round(t * 1000), fn };
+}
+const SP = { body: spring(DIAL.body), snap: spring(DIAL.snap), drawer: spring(DIAL.drawer), cam: spring(DIAL.cam) };
+const rootStyle = document.documentElement.style;
+rootStyle.setProperty('--spring', SP.drawer.css); rootStyle.setProperty('--spring-dur', SP.drawer.dur + 'ms');
+rootStyle.setProperty('--snap', SP.snap.css); rootStyle.setProperty('--snap-dur', SP.snap.dur + 'ms');
+const boing = (node, frames, sp = SP.body) => RM ? null : node.animate(frames, { duration: sp.dur, easing: sp.css });
+
+/* ── helpers ───────────────────────────────────────────────────── */
+const $ = (s, r = document) => r.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const svg = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+let timers = [], runGen = 0;
+const T = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+
+function rng(seed) {
+  let h = 2166136261; for (const ch of seed) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10007) / 10007; };
+}
+/* a kamea-ish sigil: a walk across a 4×4 square, circle at the start, bar at the end */
+function sigil(seed) {
+  const r = rng(seed + '·mark'); const pts = []; const used = new Set();
+  while (pts.length < 5) { const x = Math.floor(r() * 4), y = Math.floor(r() * 4), key = x + ',' + y; if (used.has(key)) continue; used.add(key); pts.push([3 + x * 6, 3 + y * 6]); }
+  const [sx, sy] = pts[0], [ex, ey] = pts[4], [px, py] = pts[3];
+  const dx = ex - px, dy = ey - py, l = Math.hypot(dx, dy) || 1, nx = -dy / l * 3, ny = dx / l * 3;
+  return `<svg class="glyph" viewBox="0 0 24 24"><circle cx="${sx}" cy="${sy}" r="2.2" pathLength="1"/><path d="M${pts.map((p) => p.join(' ')).join(' L')}" pathLength="1"/><path d="M${ex + nx} ${ey + ny} L${ex - nx} ${ey - ny}" pathLength="1"/></svg>`;
+}
+const FACE = `<svg class="face" viewBox="0 0 30 16">
+  <g class="f-open">
+    <ellipse class="blush" cx="4.5" cy="12" rx="2.6" ry="1.4"/><ellipse class="blush" cx="25.5" cy="12" rx="2.6" ry="1.4"/>
+    <g class="eye"><circle cx="9" cy="8" r="2.7"/><circle class="hl" cx="10" cy="6.9" r="0.95"/></g>
+    <g class="eye"><circle cx="21" cy="8" r="2.7"/><circle class="hl" cx="22" cy="6.9" r="0.95"/></g>
+    <path d="M13.6 11.4 q1.4 1.4 2.8 0"/>
+  </g>
+  <g class="f-blocked"><path d="M6.4 5.4 L10.6 8 L6.4 10.6"/><path d="M23.6 5.4 L19.4 8 L23.6 10.6"/><path d="M13.4 12.2 q0.8 -0.8 1.6 0 q0.8 0.8 1.6 0"/></g>
+  <g class="f-done"><path d="M6.2 8 q2.8 2.8 5.6 0"/><path d="M18.2 8 q2.8 2.8 5.6 0"/><path d="M14 12 h2"/></g>
+  <g class="f-killed"><path d="M7 6 l4 4 M11 6 l-4 4"/><path d="M19 6 l4 4 M23 6 l-4 4"/></g>
+</svg>`;
+
+function traceSigil(root, delay = 0) {
+  if (RM) return;
+  root.querySelectorAll('.glyph > *').forEach((p, i) =>
+    p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 380, delay: delay + i * 140, easing: 'cubic-bezier(.6,0,.3,1)', fill: 'backwards' }));
+}
+
+/* ── the run ───────────────────────────────────────────────────── */
+const STEPS = [
+  { id: 'scout', ink: 'sakura' },
+  { id: 'draft', ink: 'wisteria' },
+  { id: 'review', ink: 'kaki' },
+  { id: 'publish', ink: 'matcha' },
+];
+const SCRIPT = {
+  scout: {
+    lines: ['● Read map/README.md', '  ⎿ 31 lines', '● Glob map/src/renderer/src/**/*.ts', '  ⎿ 14 files', '● Read src/Booklet.tsx', '● Read src/canvas/stage.ts',
+      '● 6 surfaces worth a page: booklet, canvas,', '  windows, rules, marks, keys', '', 'handoff → draft'],
+  },
+  draft: {
+    lines: ['● Read handoff from scout', '● Write docs/map/booklet.md', '  ⎿ 64 lines', '● Write docs/map/canvas.md', '  ⎿ 88 lines', '● spawn linker: cross-link the pages', '● spawn shots: one screenshot per page'],
+    more: ['● Write docs/map/windows.md', '  ⎿ 52 lines', '● Edit docs/map/canvas.md (+12 −3)', '● Read src/canvas/win.ts', '● Write docs/map/rules.md', '  ⎿ 41 lines', '● Edit docs/map/booklet.md (+4 −1)', '● Write docs/map/keys.md', '  ⎿ 23 lines'],
+  },
+  linker: {
+    lines: ['● Grep "booklet" docs/map', '  ⎿ 9 matches', '', '? should "keys" be its own page', '  or a section in canvas.md?', '> '],
+    more: ['● keys stays a page; linking it', '● Edit docs/map/canvas.md (+3)', '● Edit docs/map/booklet.md (+2)', '● Edit docs/map/rules.md (+2)', '● 11 links, none dangling'],
+  },
+  shots: {
+    lines: ['spawn queued behind max_agents', '· waiting for a slot'],
+    more: ['● slot free — starting', '● open map at 1440×900', '● shot docs/map/img/booklet.png', '● shot docs/map/img/canvas.png', '● shot docs/map/img/windows.png'],
+  },
+  review: {
+    lines: ['● Read handoff from draft'],
+    more: ['● Read docs/map/*.md', '  ⎿ 6 pages', '● 2 pages say “booklet”, 1 says “sidebar”', '● Edit docs/map/keys.md (+1 −1)', '● spawn tests: run the doc snippets', '● Read docs/map/img/', '  ⎿ 5 shots, 1 missing (keys)', '● the canvas page buries the zoom gesture', '● Edit docs/map/canvas.md (+6 −2)'],
+  },
+  tests: {
+    lines: [],
+    more: ['● extract 9 snippets from docs/map', '● run snippet 1/9 · ok', '● run snippet 2/9 · ok', '● run snippet 3/9 · ok', '● run snippet 4/9 · stale flag --addr', '● run snippet 5/9 · ok', '● run snippet 6/9 · ok'],
+  },
+};
+
+let A, order, worldEl, rulesEl, tokensEl, handoffs, clockBase, clockStart;
+
+function initRun() {
+  handoffs = 1; clockBase = 7 * 60 + 12; clockStart = performance.now();
+  A = {
+    scout:  { id: 'scout',  ink: 'sakura',   step: 0, state: 'done',    meta: 'wt/scout-3f2a' },
+    draft:  { id: 'draft',  ink: 'wisteria', step: 1, state: 'busy',    meta: 'wt/draft-3f2a' },
+    linker: { id: 'linker', ink: 'sky',      parent: 'draft', j: 0, state: 'waiting', meta: 'wt/draft-3f2a' },
+    shots:  { id: 'shots',  ink: 'matcha',   parent: 'draft', j: 1, state: 'blocked', meta: 'queued' },
+  };
+  order = ['scout', 'draft', 'linker', 'shots'];
+  for (const id in A) { A[id].lines = [...SCRIPT[id].lines]; A[id].cursor = 0; }
+}
+
+function pos(a) {
+  if (a.parent) { const p = pos(A[a.parent]); return { x: p.x + W + GX, y: p.y + a.j * (HH + 24), w: HW, h: HH }; }
+  return { x: 0, y: a.step * PITCH, w: W, h: H };
+}
+const nodes = (id) => document.querySelectorAll(`[data-id="${id}"]`);
+
+/* ── drawing ───────────────────────────────────────────────────── */
+function makeWin(a) {
+  const p = pos(a);
+  const w = document.createElement('article');
+  w.className = `win s-${a.state}${a.parent ? ' helper' : ''}`;
+  w.dataset.id = a.id;
+  w.style.cssText = `--c:${INK[a.ink]};--i:${order.indexOf(a.id)};left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px`;
+  w.innerHTML = `<header class="w-head"><span class="w-sign">${sigil(a.id)}</span><span class="w-face">${FACE}</span><span class="w-name">${a.id}</span><span class="chip">${LABEL[a.state]}</span><span class="w-meta">${a.meta}</span><button class="w-kill">kill</button></header><div class="w-body"><pre class="term"></pre></div>`;
+  worldEl.append(w);
+  a.el = w; a.term = w.querySelector('.term');
+  paint(a);
+  return w;
+}
+function makePlaceholder(s) {
+  const d = document.createElement('div');
+  d.className = 'ph'; d.dataset.ph = s.id;
+  d.style.cssText = `--c:${INK[s.ink]};left:0;top:${STEPS.indexOf(s) * PITCH}px;width:${W}px;height:${H}px`;
+  d.innerHTML = `${sigil(s.id)}<div class="p-name">${s.id}</div><span class="chip">not started</span>`;
+  worldEl.append(d);
+}
+function paint(a) {
+  const n = a.parent ? 7 : 12;
+  const html = a.lines.slice(-n).map((l) => {
+    const e = esc(l);
+    if (l.startsWith('●')) return `<span class="b">●</span>${e.slice(1)}`;
+    if (l.startsWith('  ⎿') || l.startsWith('·')) return `<span class="m">${e}</span>`;
+    if (l.startsWith('?') || l.startsWith('handoff')) return `<span class="q">${e}</span>`;
+    return e;
+  }).join('\n');
+  a.term.innerHTML = html + (a.state === 'busy' || a.state === 'waiting' ? '<span class="cursor"></span>' : '');
+}
+
+function stepRule(i) {
+  const x = W / 2, y1 = i * PITCH + H + 10, y2 = (i + 1) * PITCH - 10;
+  const d = `M${x} ${y1} V${y2}`;
+  const g = svg('g'); g.dataset.rule = 's' + i;
+  g.append(svg('path', { class: 'r-base', d }));
+  const f = svg('path', { class: 'r-fill', d, pathLength: 1, stroke: INK[STEPS[i].ink] });
+  f.style.strokeDashoffset = 1;
+  g.append(f); rulesEl.append(g);
+  return f;
+}
+function dockRule(a) {
+  const p = pos(A[a.parent]), h = pos(a);
+  const y1 = p.y + 64 + a.j * 30, y2 = h.y + 64, xm = p.x + W + GX / 2;
+  const d = `M${p.x + W + 6} ${y1} H${xm} V${y2} H${h.x - 6}`;
+  const f = svg('path', { class: 'r-fill', d, pathLength: 1, stroke: INK[a.ink] });
+  f.dataset.rule = 'd' + a.id;
+  f.style.strokeDashoffset = 1; f.style.strokeOpacity = 0.75;
+  rulesEl.append(f);
+  return f;
+}
+const drawRule = (f, ms = 260) => { if (RM) return void (f.style.strokeDashoffset = 0); f.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: ms, easing: 'cubic-bezier(.6,0,.3,1)' }).finished.then(() => (f.style.strokeDashoffset = 0)); };
+
+function makeTrack(a, animate) {
+  const li = document.createElement('li');
+  li.className = `who s-${a.state}${a.parent ? ' helper' : ''}`;
+  li.dataset.id = a.id;
+  li.style.cssText = `--c:${INK[a.ink]};--i:${order.indexOf(a.id)}`;
+  li.innerHTML = `<span class="tn">${String(order.indexOf(a.id) + 1).padStart(2, '0')}</span><span class="w-sign">${sigil(a.id)}</span>${FACE}<span class="wid">${a.id}</span><span class="chip">${LABEL[a.state]}</span>`;
+  li.onpointerenter = () => a.el?.classList.add('hl');
+  li.onpointerleave = () => a.el?.classList.remove('hl');
+  li.onclick = () => focusOn(a.id);
+  $('#tracks').append(li);
+  $('#ntracks').textContent = `${order.length} tracks`;
+  if (animate) boing(li, [{ transform: 'scale(.6, 1.2)', opacity: 0 }, { transform: 'none', opacity: 1 }]);
+}
+
+function paintPower() {
+  const live = order.filter((id) => ['busy', 'waiting'].includes(A[id].state));
+  const held = order.filter((id) => A[id].state === 'blocked');
+  const beads = $('#beads'); beads.innerHTML = '';
+  for (let i = 0; i < CAP; i++) {
+    const b = document.createElement('i');
+    const who = i < live.length ? A[live[i]] : i < live.length + held.length ? A[held[i - live.length]] : null;
+    if (who) { b.className = i < live.length ? 'on' : 'held'; b.style.setProperty('--c', INK[who.ink]); b.title = who.id; }
+    beads.append(b);
+  }
+  $('#powerdt').textContent = live.length >= CAP ? 'power · at cap' : `power · ${live.length} of ${CAP} live`;
+  $('#plive').textContent = live.length; $('#pcap').textContent = `of ${CAP}`;
+  $('#runnote').textContent = `running · ${live.length} live`;
+  const pf = $('#pfaces'); pf.innerHTML = '';
+  for (const id of order) {
+    const a = A[id]; if (a.state === 'done' || a.state === 'killed') continue;
+    const m = document.createElement('div');
+    m.className = `mochi s-${a.state}`; m.dataset.id = id; m.title = `${id} · ${LABEL[a.state]}`;
+    m.style.cssText = `--c:${INK[a.ink]};--i:${order.indexOf(id)}`;
+    m.innerHTML = FACE; pf.append(m);
+  }
+  $('#drawer').style.setProperty('--pill-h', $('#pill').offsetHeight + 'px');
+}
+
+/* ── state ─────────────────────────────────────────────────────── */
+function setState(id, s) {
+  const a = A[id]; a.state = s;
+  nodes(id).forEach((n) => {
+    n.className = n.className.replace(/\bs-\w+/, 's-' + s);
+    const c = n.querySelector('.chip'); if (c) c.textContent = LABEL[s];
+  });
+  paint(a); paintPower();
+  if (s === 'busy') { live(a); blinks(a); }
+}
+function live(a) {
+  const gen = (a.gen = (a.gen || 0) + 1);
+  const tick = () => {
+    if (a.gen !== gen || a.state !== 'busy') return;
+    const more = SCRIPT[a.id].more || [];
+    if (a.cursor < more.length) { a.lines.push(more[a.cursor++]); paint(a); }
+    T(tick, 900 + Math.random() * 1100);
+  };
+  T(tick, 600);
+}
+function blinks(a) {
+  const gen = (a.bgen = (a.bgen || 0) + 1);
+  const once = () => { nodes(a.id).forEach((n) => n.classList.add('blink')); T(() => nodes(a.id).forEach((n) => n.classList.remove('blink')), 120); };
+  const next = () => {
+    if (a.bgen !== gen || a.state !== 'busy' || RM) return;
+    once(); if (Math.random() < 0.25) T(once, 240);
+    if (Math.random() < 0.35) glance(a, Math.random() < 0.5 ? -1.8 : 1.8, 0);
+    T(next, DIAL.blinkMin + Math.random() * DIAL.blinkVar);
+  };
+  T(next, 400 + Math.random() * 1500);
+}
+function glance(a, lx, ly, ms = 900) {
+  nodes(a.id).forEach((n) => { n.style.setProperty('--lx', lx + 'px'); n.style.setProperty('--ly', ly + 'px'); });
+  T(() => nodes(a.id).forEach((n) => { n.style.removeProperty('--lx'); n.style.removeProperty('--ly'); }), ms);
+}
+function bump(el) { boing(el, [{ transform: 'scale(1.3)' }, { transform: 'none' }]); }
+
+/* ── handoff tokens hop along the rule ─────────────────────────── */
+function hop(path, { reverse = false, ink, fill = null, onDone }) {
+  const L = path.getTotalLength(), n = Math.max(2, Math.round(L / DIAL.hopPx)), seg = L / n;
+  if (RM) { if (fill) fill.style.strokeDashoffset = 0; onDone?.(); return; }
+  const gen = runGen;
+  const g = svg('g', { class: 'token' });
+  g.append(svg('ellipse', { class: 't-body', rx: 8, ry: 7, fill: ink }), svg('circle', { class: 't-core', r: 2.6 }));
+  tokensEl.append(g);
+  const t0 = performance.now();
+  const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p));
+  const frame = (now) => {
+    if (gen !== runGen) return void g.remove();
+    const t = (now - t0) / DIAL.hopMs, done = t >= n;
+    const k = Math.min(Math.floor(t), n - 1), p = done ? 1 : t - k;
+    const along = Math.min(L, (k + ease(p)) * seg), s = reverse ? L - along : along;
+    const a = path.getPointAtLength(s), b = path.getPointAtLength(Math.max(0, Math.min(L, s + (reverse ? -1 : 1))));
+    let tx = b.x - a.x, ty = b.y - a.y; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    let nx = ty, ny = -tx; if (ny > 0 || (ny === 0 && nx < 0)) { nx = -nx; ny = -ny; }
+    const h = 4 * DIAL.hopH * p * (1 - p);
+    const land = p < 0.14 ? 1 - p / 0.14 : p > 0.86 ? (p - 0.86) / 0.14 : 0;
+    const air = Math.sin(Math.PI * p);
+    const sx = 1 + 0.35 * land - 0.08 * air, sy = 1 - 0.3 * land + 0.12 * air;
+    const ang = Math.atan2(ty, tx) * 180 / Math.PI;
+    g.setAttribute('transform', `translate(${a.x + nx * h} ${a.y + ny * h}) rotate(${ang}) scale(${sx} ${sy})`);
+    if (fill) fill.style.strokeDashoffset = 1 - along / L;
+    if (!done) return requestAnimationFrame(frame);
+    g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).finished.then(() => g.remove());
+    onDone?.();
+  };
+  requestAnimationFrame(frame);
+}
+
+function handoffBack(id) {
+  const a = A[id], parent = A[a.parent];
+  glance(a, -1.8, 0, 600);
+  T(() => {
+    setState(id, 'done');
+    boing(a.el, [{ transform: 'translateY(4px) scale(1.01, .97)' }, { transform: 'none' }]);
+    hop(rulesEl.querySelector(`[data-rule="d${id}"]`), {
+      reverse: true, ink: INK[a.ink],
+      onDone: () => {
+        boing(parent.el, [{ transform: 'scale(1.025, .965)' }, { transform: 'none' }]);
+        glance(parent, 1.8, 0, 700);
+        handoffs++; $('#handoffs').textContent = handoffs; bump($('#handoffs'));
+      },
+    });
+  }, 450);
+}
+
+function handoffDown(i) {
+  const from = A[STEPS[i].id], to = STEPS[i + 1];
+  glance(from, 0, 1.8, 700);
+  T(() => {
+    setState(from.id, 'done');
+    boing(from.el, [{ transform: 'translateY(4px) scale(1.01, .97)' }, { transform: 'none' }]);
+    const f = rulesEl.querySelector(`[data-rule="s${i}"] .r-fill`);
+    hop(f, {
+      ink: INK[from.ink], fill: f,
+      onDone: () => {
+        handoffs++; $('#handoffs').textContent = handoffs; bump($('#handoffs'));
+        birth(to, i + 1);
+      },
+    });
+  }, 500);
+}
+
+function birth(s, step) {
+  const ph = worldEl.querySelector(`[data-ph="${s.id}"]`);
+  const a = (A[s.id] = { id: s.id, ink: s.ink, step, state: 'busy', meta: `wt/${s.id}-3f2a`, lines: [...SCRIPT[s.id].lines], cursor: 0 });
+  order.push(s.id);
+  if (ph) (RM ? Promise.resolve() : ph.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }], { duration: 160, fill: 'forwards' }).finished).then(() => ph.remove());
+  const w = makeWin(a);
+  boing(w, [{ transform: 'scale(1.1, .72)', opacity: 0 }, { transform: 'none', opacity: 1 }]);
+  traceSigil(w, 200);
+  makeTrack(a, true);
+  setState(s.id, 'busy');
+  follow();
+}
+
+function spawnHelper(id, parentId, ink, j) {
+  const a = (A[id] = { id, ink, parent: parentId, j, state: 'busy', meta: `wt/${parentId}-3f2a`, lines: [...SCRIPT[id].lines], cursor: 0 });
+  order.push(id);
+  const w = makeWin(a); w.classList.add('sliding');
+  const r = dockRule(a);
+  const anim = boing(w, [{ transform: `translateX(${-(GX + HW * 0.55)}px) scale(.82)`, opacity: 0 }, { transform: 'none', opacity: 1 }]);
+  const after = () => { w.classList.remove('sliding'); drawRule(r); };
+  anim ? anim.finished.then(after) : after();
+  traceSigil(w, 250);
+  glance(A[parentId], 1.8, 0, 900);
+  makeTrack(a, true);
+  setState(id, 'busy');
+  follow();
+}
+
+function kill(id) {
+  const a = A[id]; if (!a || a.state === 'done' || a.state === 'killed') return;
+  setState(id, 'killed');
+  if (!RM) a.el.animate([{ translate: '0' }, { translate: '-6px 0' }, { translate: '6px 0' }, { translate: '-3px 0' }, { translate: '2px 0' }, { translate: '0' }], { duration: 380, easing: 'ease-out' });
+}
+
+/* ── camera ────────────────────────────────────────────────────── */
+const cam = { x: 0, y: 0, s: 1, following: true, flight: 0 };
+const applyCam = () => (worldEl.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.s})`);
+function bounds() {
+  let x0 = 0, y0 = 0, x1 = W, y1 = 0;
+  for (const id of order) { const p = pos(A[id]); x1 = Math.max(x1, p.x + p.w); y1 = Math.max(y1, p.y + p.h); }
+  y1 = Math.max(y1, (STEPS.length - 1) * PITCH + H);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+function leftInset() { return $('#drawer').classList.contains('pinned') ? 12 + 320 + 24 : 12 + 64 + 24; }
+function fly(r, pad = 48, maxS = 1) {
+  const L = leftInset(), vw = innerWidth - L - pad * 2, vh = innerHeight - pad * 2;
+  const s = Math.min(vw / r.w, vh / r.h, maxS);
+  const to = { x: L + pad + (vw - r.w * s) / 2 - r.x * s, y: pad + (vh - r.h * s) / 2 - r.y * s, s };
+  if (RM) { Object.assign(cam, to); return applyCam(); }
+  const from = { ...cam }, t0 = performance.now(), id = ++cam.flight, dur = Math.max(560, SP.cam.dur);
+  const step = (now) => {
+    if (id !== cam.flight) return;
+    const e = SP.cam.fn((now - t0) / dur);
+    cam.s = from.s * Math.pow(to.s / from.s, e);
+    cam.x = from.x + (to.x - from.x) * e; cam.y = from.y + (to.y - from.y) * e;
+    applyCam(); if (now - t0 < dur) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+const fitAll = () => { cam.following = true; unfocus(); fly(bounds(), 56, 0.9); };
+const follow = () => cam.following && fly(bounds(), 56, 0.9);
+function focusOn(id) {
+  const a = A[id]; if (!a) return;
+  cam.following = false;
+  document.querySelectorAll('.focused').forEach((n) => n.classList.remove('focused'));
+  nodes(id).forEach((n) => n.classList.add('focused'));
+  fly(pos(a), 40, 1.6);
+}
+function unfocus() { document.querySelectorAll('.focused').forEach((n) => n.classList.remove('focused')); }
+
+const canvas = $('#canvas');
+let drag = null;
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 && e.button !== 1) return;
+  drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false, target: e.target };
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  drag.moved = true; cam.flight++; cam.following = false; canvas.classList.add('panning');
+  cam.x = drag.cx + dx; cam.y = drag.cy + dy; applyCam();
+});
+canvas.addEventListener('pointerup', () => {
+  if (!drag) return;
+  canvas.classList.remove('panning');
+  if (!drag.moved) {
+    const t = drag.target;
+    const k = t.closest?.('.w-kill');
+    const w = t.closest?.('.win');
+    if (k && w) kill(w.dataset.id);
+    else if (w) focusOn(w.dataset.id);
+    else fitAll();
+  }
+  drag = null;
+});
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault(); cam.flight++; cam.following = false;
+  const f = Math.exp(-e.deltaY * 0.0015), s = Math.min(2.4, Math.max(0.08, cam.s * f));
+  cam.x = e.clientX - (e.clientX - cam.x) * (s / cam.s); cam.y = e.clientY - (e.clientY - cam.y) * (s / cam.s); cam.s = s; applyCam();
+}, { passive: false });
+
+/* ── drawer: a pill that springs open on hover, or pinned ──────── */
+const drawer = $('#drawer'), sheet = $('#sheet'), pinBtn = $('#pin');
+let closeT = 0;
+$('#mast').innerHTML = [...'aeolian'].map((c, k) => `<span style="--k:${k}">${c}</span>`).join('');
+const openDrawer = () => { clearTimeout(closeT); drawer.classList.add('open'); };
+const closeDrawer = () => { if (!drawer.classList.contains('pinned')) drawer.classList.remove('open'); };
+sheet.addEventListener('pointerenter', openDrawer);
+sheet.addEventListener('pointerleave', () => { clearTimeout(closeT); closeT = setTimeout(closeDrawer, DIAL.closeDelay); });
+function togglePin() {
+  const on = !drawer.classList.contains('pinned');
+  drawer.classList.toggle('pinned', on); pinBtn.setAttribute('aria-pressed', on);
+  on ? openDrawer() : closeDrawer();
+  if (cam.following) follow();
+}
+pinBtn.onclick = togglePin;
+
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'b') { e.preventDefault(); togglePin(); }
+  else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); fitAll(); }
+  else if (e.key === 'Escape') { const f = $('.win.focused') || A.draft?.el; if (f) focusOn(f.dataset.id); }
+});
+addEventListener('resize', () => cam.following && fly(bounds(), 56, 0.9));
+$('#replay').onclick = start;
+
+/* ── the clock ─────────────────────────────────────────────────── */
+setInterval(() => {
+  const s = clockBase + Math.floor((performance.now() - clockStart) / 1000);
+  $('#clock').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}, 250);
+
+/* ── the timeline ──────────────────────────────────────────────── */
+function start() {
+  timers.forEach(clearTimeout); timers = []; runGen++;
+  for (const id in (A || {})) { A[id].gen = -1; A[id].bgen = -1; }
+  worldEl = $('#world'); rulesEl = $('#rules'); tokensEl = $('#tokens');
+  worldEl.querySelectorAll('.win, .ph').forEach((n) => n.remove());
+  rulesEl.innerHTML = ''; tokensEl.innerHTML = ''; $('#tracks').innerHTML = '';
+  initRun();
+  $('#handoffs').textContent = handoffs;
+
+  STEPS.forEach((s, i) => { if (i < STEPS.length - 1) stepRule(i); });
+  rulesEl.querySelector('[data-rule="s0"] .r-fill').style.strokeDashoffset = 0;
+  for (const id of order) {
+    const w = makeWin(A[id]); traceSigil(w, order.indexOf(id) * 120);
+    if (A[id].parent) dockRule(A[id]).style.strokeDashoffset = 0;
+    makeTrack(A[id], false);
+  }
+  STEPS.slice(2).forEach(makePlaceholder);
+  paintPower();
+  blinks(A.draft); live(A.draft);
+
+  cam.following = true;
+  const b = bounds(), L = leftInset(), vw = innerWidth - L - 112, vh = innerHeight - 112, s = Math.min(vw / b.w, vh / b.h, 0.9);
+  Object.assign(cam, { s, x: L + 56 + (vw - b.w * s) / 2, y: 56 + (vh - b.h * s) / 2 }); applyCam();
+
+  T(() => { setState('shots', 'busy'); A.shots.meta = 'wt/draft-3f2a'; boing(A.shots.el, [{ transform: 'translateY(-10px) scale(.98, 1.03)' }, { transform: 'none' }]); }, 3500);
+  T(() => { A.linker.lines.push('> its own page'); setState('linker', 'busy'); }, 7000);
+  T(() => handoffBack('shots'), 11500);
+  T(() => handoffBack('linker'), 14000);
+  T(() => handoffDown(1), 18000);
+  T(() => spawnHelper('tests', 'review', 'sakura', 0), 23500);
+}
+
+document.fonts.ready.then(start);
+</script>
+</body>
+</html>

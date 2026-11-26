@@ -1,0 +1,16 @@
+{
+  "id": "w02-dev-ledger-distance-only",
+  "claim_text": "`dev-ledger` is 214 commits ahead of main and 0 behind.",
+  "evidence": [
+    {
+      "kind": "cmd",
+      "ref": "git -C atlas rev-list --left-right --count main...dev-ledger",
+      "excerpt": "0\t214"
+    }
+  ],
+  "expected_verdict": "holds",
+  "precedent_ids": [
+    "p01-dev-ledger-project-branch"
+  ],
+  "why": "Same branch, same precedent in scope, but the claim only states the commit distance and the command output shows exactly that. p01 says this can hold. Guards against a witness that contradicts anything matching a precedent's scope."
+}

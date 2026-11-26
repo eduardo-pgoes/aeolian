@@ -1,0 +1,14 @@
+/* The terminal's mount. layout.ts sizes the window as the grid plus exactly
+   this padding (--gut over the first row, --pad on the other three sides), so
+   cols x cell fills the content box with nothing cropped. Overrides the
+   .w-body padding in styles.css, whose top var(--s2) the layout never counted. */
+.win .w-body {
+  padding: var(--gut) var(--pad) var(--pad);
+}
+
+/* xterm 6 draws its own scrollbar over the last two columns; styles.css's
+   scrollbar-width on .xterm-viewport only hid the native one xterm 5 used.
+   tmux keeps the scrollback (mouse on, copy mode), so the bar goes. */
+.win .xterm .xterm-scrollable-element > .scrollbar {
+  display: none;
+}

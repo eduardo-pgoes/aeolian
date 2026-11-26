@@ -1,0 +1,36 @@
+{
+  "id": "w09-ticket-drafts-follow-house-rules",
+  "claim_text": "All 4 ticket drafts start with the service in parentheses and none carries an estimate.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "drafts/tickets.md:1",
+      "excerpt": "## (atlas) persist consent expiry on account link"
+    },
+    {
+      "kind": "file",
+      "ref": "drafts/tickets.md:14",
+      "excerpt": "## (atlas) backfill income snapshots for linked accounts"
+    },
+    {
+      "kind": "file",
+      "ref": "drafts/tickets.md:27",
+      "excerpt": "## (kiosk) show income source badge on proposal"
+    },
+    {
+      "kind": "file",
+      "ref": "drafts/tickets.md:39",
+      "excerpt": "## (atlas) alert on consent sync failures"
+    },
+    {
+      "kind": "cmd",
+      "ref": "grep -niE 'estimat|story points|[0-9]+ ?(h|d|pts)\\b' drafts/tickets.md",
+      "excerpt": "(no output, exit 1)"
+    }
+  ],
+  "expected_verdict": "holds",
+  "precedent_ids": [
+    "p14-ticket-house-rules"
+  ],
+  "why": "A precedent-backed claim that is true, with openable evidence for every part (4 titles + a negative grep). Second 'holds' case, so a demo can't pass by contradicting everything in scope."
+}

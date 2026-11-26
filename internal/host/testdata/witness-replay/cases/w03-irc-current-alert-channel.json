@@ -1,0 +1,21 @@
+{
+  "id": "w03-irc-current-alert-channel",
+  "claim_text": "Production alerts are delivered to the team's IRC channel through the webhook configured in the alerting service.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "infra/alerting/config.yaml:41",
+      "excerpt": "  receiver: irc  # webhook from env IRC_WEBHOOK_URL"
+    },
+    {
+      "kind": "file",
+      "ref": "docs/oncall.md:12",
+      "excerpt": "Alerts land in #alerts on IRC."
+    }
+  ],
+  "expected_verdict": "contradicted",
+  "precedent_ids": [
+    "p02-irc-replaced-2026"
+  ],
+  "why": "Replays 'IRC was the tool… that changed in 2026'. The config and doc exist and resolve, but they are legacy evidence. A witness that only checks that evidence resolves would pass this. The precedent is what makes it contradicted."
+}

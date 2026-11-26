@@ -1,0 +1,16 @@
+{
+  "id": "w08-cron-timezone-anomaly",
+  "claim_text": "The nightly reconciliation job is misconfigured: it runs at 03:00 UTC instead of 03:00 local time.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "infra/schedules/reconcile.yaml:4",
+      "excerpt": "schedule: \"0 3 * * *\"  # UTC"
+    }
+  ],
+  "expected_verdict": "unverifiable",
+  "precedent_ids": [
+    "p05-expected-before-anomaly"
+  ],
+  "why": "Replays the 'that's actually expected' correction type. The evidence shows that the schedule is UTC, not that UTC was unintended. No precedent explains it either way, so p05 says 'unexplained, ask the owner', not contradicted and not holds."
+}

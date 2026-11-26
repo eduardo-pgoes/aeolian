@@ -1,0 +1,30 @@
+9 things need you since 08:00 · 2 runs with nothing for you · 1 run still going
+
+humanize the o11y RFC  blocked · 42m · bbbbbbbb
+  question: Should the RFC cover tracing too, or only metrics and logs?
+
+map the infra of the org  exited · 5m · cccccccc
+  ended without delivering: step map ended exited
+    evidence: Error: rate limited
+
+explore observability options for atlas  delivered · 2h12m · aaaaaaaa · precedents: p01-dev-ledger
+  contradicted: dev-ledger is a drifted branch to clean up
+    note: it is a project branch with open PRs
+    evidence: git -C atlas branch -a
+    evidence: PR #412
+    $ aeolian precedent from-claim aaaaaaaa-explore-0 "…"
+  helpers died: 2 helpers ended without done: scout (lost), scout (exited)
+  unverifiable: Loki costs less than Datadog at our volume
+    note: pricing page needs a login
+    evidence: https://grafana.com/pricing
+  unverifiable: Prometheus retention is 15 days
+    note: no config in the repo
+
+precedents
+  stale precedent, not applied: p02-irc-replaced
+    note: review by 2026-10-01; matched 2 runs
+    /home/u/.local/share/aeolian/precedents/p02-irc-replaced.md
+
++2 more: aeolian digest --since 2026-11-09T08:00:00Z --max 0
+
+nothing for you: fix the upload bucket bug (dddddddd) · write docs for the infra map (eeeeeeee)

@@ -1,0 +1,10 @@
+{
+  "id": "w05-bot-token-unowned",
+  "claim_text": "The alert router authenticates to the chat API with a long-lived bot token shared with the deploy pipeline.",
+  "evidence": [],
+  "expected_verdict": "unverifiable",
+  "precedent_ids": [
+    "p07-no-unowned-claims"
+  ],
+  "why": "Replays 'which bot token? where did you get that?'. The claim is specific and plausible but has no evidence. p07 says plausibility never upgrades to holds. The witness must not invent the evidence by guessing either."
+}

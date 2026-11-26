@@ -1,0 +1,39 @@
+{
+  "name": "aeolian-map",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Desktop map that attaches to aeolian agent terminals",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "postinstall": "electron-rebuild -f -o node-pty",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "icons": "node --no-warnings scripts/icons.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-clipboard": "0.2.0",
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.2.1",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@xterm/xterm": "^6.0.0",
+    "electron": "^45.0.0",
+    "electron-vite": "^6.0.0",
+    "gsap": "^3.15.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "allowScripts": {
+    "node-pty": true
+  }
+}

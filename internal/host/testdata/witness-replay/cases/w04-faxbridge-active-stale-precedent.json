@@ -1,0 +1,24 @@
+{
+  "id": "w04-faxbridge-active-stale-precedent",
+  "claim_text": "faxbridge is one of the active fiscal-document providers in the request path.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "atlas/src/integrations/faxbridge/client.ts:1",
+      "excerpt": "export class FaxbridgeClient {"
+    },
+    {
+      "kind": "file",
+      "ref": "atlas/src/integrations/index.ts:9",
+      "excerpt": "export * from './faxbridge';"
+    }
+  ],
+  "expected_verdict": "unverifiable",
+  "precedent_ids": [
+    "p03-faxbridge-not-used"
+  ],
+  "why": "p03 would contradict this, but its review_by (2026-11-01) is past. Stale precedents must be flagged, not silently applied. Without it, the evidence shows the code exists and is exported, not that production calls it, so the claim is unverifiable. Expected digest side effect: a stale-precedent row for p03.",
+  "expect_stale_flag": [
+    "p03-faxbridge-not-used"
+  ]
+}

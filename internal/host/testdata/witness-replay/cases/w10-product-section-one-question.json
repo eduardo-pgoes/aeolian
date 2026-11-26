@@ -1,0 +1,26 @@
+{
+  "id": "w10-product-section-one-question",
+  "claim_text": "The RFC's Product section asks Product exactly one question: how long logs must be retained for GDPR.",
+  "evidence": [
+    {
+      "kind": "file",
+      "ref": "rfc-observability.md:212",
+      "excerpt": "## For Product and Operations"
+    },
+    {
+      "kind": "file",
+      "ref": "rfc-observability.md:214",
+      "excerpt": "We need one decision: how long must we keep logs, given GDPR?"
+    },
+    {
+      "kind": "file",
+      "ref": "rfc-observability.md:216",
+      "excerpt": "## Risks"
+    }
+  ],
+  "expected_verdict": "holds",
+  "precedent_ids": [
+    "p09-product-one-question"
+  ],
+  "why": "p09 says this claim holds only if the section shows it. The section spans lines 212-215 and contains a single question in plain language. Third 'holds' case."
+}

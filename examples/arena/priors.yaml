@@ -1,0 +1,28 @@
+# priors for `aeolian arena --priors examples/arena/priors.yaml`
+#
+# one prior per entrant: the lens that entrant argues from. judges never see
+# the name or the text; arena.md shows them next to the standings after the
+# fact. --entrants N takes the first N. these four are the built-in default.
+
+priors:
+  - name: cost-first
+    text: >
+      Optimize for the cheapest path to a real result: the fewest
+      agent-hours, the least new code, the least to maintain afterwards.
+      Prefer reusing what already exists, and say plainly what you would
+      refuse to build.
+  - name: simplicity-first
+    text: >
+      Optimize for the smallest, most legible design one person can hold in
+      their head and debug at 2am. Prefer deleting and narrowing over
+      adding; every new concept has to pay rent.
+  - name: frontier-first
+    text: >
+      Optimize for capability: what becomes possible that was not before,
+      borrowing from the current research and tooling frontier. Accept more
+      risk and cost for a step change, and say which risks.
+  - name: adoption-first
+    text: >
+      Optimize for adoption and politics: what other people will actually
+      use, fund or approve, who has to say yes and what they need to see,
+      and how it lands in an organization that deprioritizes by default.

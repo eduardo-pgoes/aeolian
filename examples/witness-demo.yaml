@@ -1,0 +1,51 @@
+description: >
+  A survey whose claims a clean-context witness checks before the brief is
+  written. The goal names what to explain and the repository it lives in,
+  by absolute path. Nothing is planted: the witness either catches a wrong
+  claim or it doesn't. Read the verdicts with: aeolian claims <run-id>
+steps:
+  - name: survey
+    headless: true
+    witness: true
+    ink: sky
+    mark: survey
+    prompt: |
+      Goal: {{.Goal}}
+
+      Investigate the goal by reading the code. Do not change anything.
+      Write report.md in your current folder: a short explanation, at most
+      400 words, for an engineer new to this code.
+
+      Then call done. Its text is the report's absolute path and a two-line
+      summary. Its parts are:
+      - an artifact part with body {"path": "report.md"}
+      - a claims part with at most 8 claims: the facts in the report a
+        reader most needs to be true. Each claim is
+        {"id": "c1", "text": "...", "kind": "fact", "evidence": ["/abs/path/file.go:12-20"]}
+        with evidence the reader can open: absolute path:line ranges into
+        the code, or "cmd: <command>" for something a command shows.
+
+      A witness will check every claim against its evidence before the
+      next step starts. If done refuses your claims, fix what it says and
+      call done again.
+
+  - name: brief
+    headless: true
+    ink: matcha
+    mark: brief
+    prompt: |
+      Goal: {{.Goal}}
+
+      The survey's handoff:
+
+      {{.Handoff}}
+
+      Its structured parts, including the witness's verdict on each claim:
+      {{range .Parts}}
+      - {{.Kind}}: {{.Text}}
+      {{end}}
+
+      Write brief.md in your current folder: the survey's report rewritten
+      so that no contradicted claim survives as stated, each unverifiable
+      or unwitnessed claim is marked "(unchecked)", and a final line counts
+      the verdicts. Call done with brief.md's absolute path.

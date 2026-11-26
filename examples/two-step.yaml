@@ -1,0 +1,58 @@
+# Two steps one after another: build makes the change and may call a
+# reviewer helper; check verifies what build handed over.
+steps:
+  - name: build
+    ink: sakura
+    mark: build
+    helpers: [reviewer]
+    prompt: |
+      Goal: {{.Goal}}
+
+      You are the build step of a two-step workflow. The goal names the git
+      repository to work in. Create your own git worktree of it on a new
+      branch, outside the main checkout, and make the change there. Commit
+      your work on that branch.
+
+      When the change is committed, call the spawn tool with role "reviewer"
+      and a handoff whose text says what you changed and whose worktrees
+      list your worktree. Address what the reviewer reports, commit again,
+      then call done with a short summary of the change and your worktree.
+
+  - name: check
+    ink: matcha
+    mark: check
+    prompt: |
+      Goal: {{.Goal}}
+
+      You are the check step of a two-step workflow. The build step handed
+      over this:
+
+      {{.Handoff}}
+      {{range .Worktrees}}
+      - worktree {{.Path}} on branch {{.Branch}} of {{.Repo}}
+      {{- end}}
+
+      Go into that worktree, run the project's tests or build, and confirm
+      the change does what the goal asks. Fix small problems and commit them
+      on the same branch. Then call done with what you checked, what you
+      found, and the same worktrees.
+
+roles:
+  reviewer:
+    ink: wisteria
+    mark: review
+    prompt: |
+      Goal of the run: {{.Goal}}
+
+      You are a reviewer. Another agent handed you this work:
+
+      {{.Handoff}}
+      {{range .Worktrees}}
+      - worktree {{.Path}} on branch {{.Branch}} of {{.Repo}}
+      {{- end}}
+      {{if .ExtraInstructions}}
+      {{.ExtraInstructions}}
+      {{end}}
+      Read the latest commits in the worktree and look for bugs. Do not
+      change any files. Call done with your findings and the worktrees
+      above.
